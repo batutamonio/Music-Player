@@ -33,6 +33,8 @@ internal fun PlaybackService.getPlayerListener() = object : Player.Listener {
     }
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+        episodeProgressTracker.onMediaItemTransition(mediaItem, reason)
+
         // customize repeat mode behaviour as the default behaviour doesn't align with our requirements.
         withPlayer {
             if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT) {
@@ -42,6 +44,18 @@ internal fun PlaybackService.getPlayerListener() = object : Player.Listener {
                 }
             }
         }
+    }
+
+    override fun onIsPlayingChanged(isPlaying: Boolean) {
+        episodeProgressTracker.onIsPlayingChanged(isPlaying)
+    }
+
+    override fun onPlaybackStateChanged(playbackState: Int) {
+        episodeProgressTracker.onPlaybackStateChanged(playbackState)
+    }
+
+    override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) {
+        episodeProgressTracker.onPositionDiscontinuity(reason)
     }
 
     override fun onRepeatModeChanged(repeatMode: Int) {

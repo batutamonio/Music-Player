@@ -5,6 +5,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import org.fossify.commons.extensions.checkUseEnglish
+import org.fossify.musicplayer.helpers.EpisodeProgressStore
 import org.fossify.musicplayer.helpers.SimpleMediaController
 
 class App : Application() {
@@ -12,6 +13,7 @@ class App : Application() {
         super.onCreate()
         checkUseEnglish()
         initController()
+        EpisodeProgressStore.load(this)
     }
 
     private fun initController() {

@@ -152,14 +152,14 @@ class AlbumsTracksAdapter(
         ItemTrackBinding.bind(view).apply {
             root.setupViewBackground(context)
             trackFrame.isSelected = selectedKeys.contains(track.hashCode())
-            trackTitle.text = track.title
+            trackTitle.text = getTitleWithProgress(track, track.title)
             trackTitle.setTextColor(textColor)
             trackInfo.text = track.album
             trackInfo.setTextColor(textColor)
 
             trackId.beGone()
             trackImage.beVisible()
-            trackDuration.text = track.duration.getFormattedDuration()
+            trackDuration.text = getDurationWithProgress(track)
             trackDuration.setTextColor(textColor)
 
             context.getTrackCoverArt(track) { coverArt ->

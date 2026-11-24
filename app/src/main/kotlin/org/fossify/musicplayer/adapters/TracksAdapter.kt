@@ -23,6 +23,7 @@ import org.fossify.musicplayer.extensions.audioHelper
 import org.fossify.musicplayer.extensions.config
 import org.fossify.musicplayer.extensions.getTrackCoverArt
 import org.fossify.musicplayer.helpers.ALL_TRACKS_PLAYLIST_ID
+import org.fossify.musicplayer.helpers.EpisodeProgressStore
 import org.fossify.musicplayer.helpers.PLAYER_SORT_BY_CUSTOM
 import org.fossify.musicplayer.inlines.indexOfFirstOrNull
 import org.fossify.musicplayer.models.Events
@@ -74,6 +75,11 @@ class TracksAdapter(
             findItem(R.id.cab_remove_from_playlist).isVisible = isPlaylistContent()
             findItem(R.id.cab_rename).isVisible = shouldShowRename()
             findItem(R.id.cab_play_next).isVisible = shouldShowPlayNext()
+
+            // marcar / desmarcar: solo si hay temas seleccionados de carpetas marcables
+            val markable = getSelectedTracks().filter { context.config.isPathMarkable(it.path) }
+            findItem(R.id.cab_mark_listened).isVisible = markable.any { EpisodeProgressStore.get(it.path)?.listened != true }
+            findItem(R.id.cab_mark_unlistened).isVisible = markable.any { EpisodeProgressStore.get(it.path)?.listened == true }
         }
     }
 
@@ -92,6 +98,8 @@ class TracksAdapter(
             R.id.cab_share -> shareFiles()
             R.id.cab_select_all -> selectAll()
             R.id.cab_play_next -> playNextInQueue()
+            R.id.cab_mark_listened -> setListened(true)
+            R.id.cab_mark_unlistened -> setListened(false)
         }
     }
 
@@ -142,6 +150,17 @@ class TracksAdapter(
         }
     }
 
+    private fun setListened(listened: Boolean) {
+        val paths = getSelectedTracks().map { it.path }.filter { context.config.isPathMarkable(it) }
+        if (paths.isEmpty()) {
+            context.toast(R.string.no_markable_tracks_selected)
+            return
+        }
+
+        EpisodeProgressStore.setListened(context, paths, listened)
+        finishActMode()
+    }
+
     private fun askConfirmDelete() {
         ConfirmationDialog(context) {
             ensureBackgroundThread {
@@ -183,7 +202,8 @@ class TracksAdapter(
         ItemTrackBinding.bind(view).apply {
             root.setupViewBackground(context)
             trackFrame.isSelected = selectedKeys.contains(track.hashCode())
-            trackTitle.text = if (textToHighlight.isEmpty()) track.title else track.title.highlightTextPart(textToHighlight, properPrimaryColor)
+            val title: CharSequence = if (textToHighlight.isEmpty()) track.title else track.title.highlightTextPart(textToHighlight, properPrimaryColor)
+            trackTitle.text = getTitleWithProgress(track, title)
             trackInfo.text = if (textToHighlight.isEmpty()) {
                 "${track.artist} • ${track.album}"
             } else {
@@ -202,7 +222,7 @@ class TracksAdapter(
                 it.setTextColor(textColor)
             }
 
-            trackDuration.text = track.duration.getFormattedDuration()
+            trackDuration.text = getDurationWithProgress(track)
             activity.getTrackCoverArt(track) { coverArt ->
                 loadImage(trackImage, coverArt, placeholderBig)
             }

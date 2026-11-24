@@ -15,6 +15,7 @@ import org.fossify.commons.extensions.showErrorToast
 import org.fossify.musicplayer.extensions.isReallyPlaying
 import org.fossify.musicplayer.extensions.nextMediaItem
 import org.fossify.musicplayer.extensions.runOnPlayerThread
+import org.fossify.musicplayer.helpers.EpisodeProgressStore
 import org.fossify.musicplayer.helpers.NotificationHelper
 import org.fossify.musicplayer.helpers.getPermissionToRequest
 import org.fossify.musicplayer.playback.library.MediaItemProvider
@@ -30,9 +31,12 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
 
     internal var currentRoot = ""
 
+    internal val episodeProgressTracker by lazy { EpisodeProgressTracker(this) }
+
     override fun onCreate() {
         super.onCreate()
         setListener(this)
+        EpisodeProgressStore.load(this)
         initializeSessionAndPlayer(handleAudioFocus = true, handleAudioBecomingNoisy = true)
         initializeLibrary()
     }
@@ -40,6 +44,7 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo) = mediaSession
 
     override fun onDestroy() {
+        episodeProgressTracker.onServiceDestroyed()
         super.onDestroy()
         releaseMediaSession()
         clearListener()

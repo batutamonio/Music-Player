@@ -1,5 +1,7 @@
 package org.fossify.musicplayer.adapters
 
+import android.text.TextUtils
+import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
 import com.qtalk.recyclerviewfastscroller.RecyclerViewFastScroller
@@ -35,11 +37,32 @@ class FoldersAdapter(
         bindViewHolder(holder)
     }
 
+    override fun prepareActionMode(menu: Menu) {
+        val selected = getSelectedItems()
+        menu.findItem(R.id.cab_make_markable).isVisible = selected.any { !context.config.isFolderMarkable(it.path) }
+        menu.findItem(R.id.cab_make_unmarkable).isVisible = selected.any { it.path.removeSuffix("/") in context.config.markableFolders }
+    }
+
     override fun actionItemPressed(id: Int) {
         when (id) {
             R.id.cab_exclude_folders -> excludeFolders()
             R.id.cab_share -> shareFiles()
+            R.id.cab_make_markable -> setMarkable(true)
+            R.id.cab_make_unmarkable -> setMarkable(false)
         }
+    }
+
+    private fun setMarkable(markable: Boolean) {
+        val paths = getSelectedItems().map { it.path }
+        if (markable) {
+            context.config.addMarkableFolders(paths)
+        } else {
+            context.config.removeMarkableFolders(paths)
+        }
+
+        finishActMode()
+        EventBus.getDefault().post(Events.RefreshFragments())
+        notifyDataSetChanged()
     }
 
     private fun excludeFolders() {
@@ -64,7 +87,8 @@ class FoldersAdapter(
         ItemFolderBinding.bind(view).apply {
             root.setupViewBackground(context)
             folderFrame.isSelected = selectedKeys.contains(folder.hashCode())
-            folderTitle.text = if (textToHighlight.isEmpty()) folder.title else folder.title.highlightTextPart(textToHighlight, properPrimaryColor)
+            val title: CharSequence = if (textToHighlight.isEmpty()) folder.title else folder.title.highlightTextPart(textToHighlight, properPrimaryColor)
+            folderTitle.text = if (context.config.isFolderMarkable(folder.path)) TextUtils.concat("🔖 ", title) else title
             folderTitle.setTextColor(textColor)
 
             val tracks = resources.getQuantityString(R.plurals.tracks_plural, folder.trackCount, folder.trackCount)

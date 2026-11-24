@@ -137,4 +137,25 @@ class Config(context: Context) : BaseConfig(context) {
         currExcludedFolders.remove(path)
         excludedFolders = currExcludedFolders
     }
+
+    // carpetas cuyos temas se pueden marcar como escuchados (incluye sus subcarpetas)
+    var markableFolders: MutableSet<String>
+        get() = HashSet(prefs.getStringSet(MARKABLE_FOLDERS, HashSet())!!)
+        set(markableFolders) = prefs.edit().remove(MARKABLE_FOLDERS).putStringSet(MARKABLE_FOLDERS, markableFolders).apply()
+
+    fun addMarkableFolders(paths: Collection<String>) {
+        markableFolders = markableFolders.apply { addAll(paths.map { it.removeSuffix("/") }.filter { it.isNotEmpty() }) }
+    }
+
+    fun removeMarkableFolders(paths: Collection<String>) {
+        markableFolders = markableFolders.apply { removeAll(paths.map { it.removeSuffix("/") }.toSet()) }
+    }
+
+    fun isFolderMarkable(folderPath: String) = isPathMarkable(folderPath.removeSuffix("/") + "/")
+
+    fun isPathMarkable(path: String): Boolean {
+        val folders = prefs.getStringSet(MARKABLE_FOLDERS, null)
+        if (folders.isNullOrEmpty() || path.isEmpty()) return false
+        return folders.any { path.startsWith("$it/") }
+    }
 }

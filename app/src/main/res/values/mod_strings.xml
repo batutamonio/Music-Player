@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_launcher_name_mod" translatable="false">Música (mod)</string>
+    <string name="mark_as_listened">Mark as listened</string>
+    <string name="mark_as_unlistened">Mark as not listened</string>
+    <string name="make_folder_markable">Make markable</string>
+    <string name="make_folder_unmarkable">Make not markable</string>
+    <string name="no_markable_tracks_selected">None of the selected tracks is in a markable folder</string>
+</resources>

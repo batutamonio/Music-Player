@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mark_as_listened">Marcar como escuchado</string>
+    <string name="mark_as_unlistened">Marcar como no escuchado</string>
+    <string name="make_folder_markable">Hacer marcable</string>
+    <string name="make_folder_unmarkable">Dejar de ser marcable</string>
+    <string name="no_markable_tracks_selected">Ninguno de los temas seleccionados está en una carpeta marcable</string>
+</resources>

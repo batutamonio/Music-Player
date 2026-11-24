@@ -10,7 +10,7 @@ import org.fossify.musicplayer.interfaces.*
 import org.fossify.musicplayer.models.*
 import org.fossify.musicplayer.objects.MyExecutor
 
-@Database(entities = [Track::class, Playlist::class, QueueItem::class, Artist::class, Album::class, Genre::class], version = 15)
+@Database(entities = [Track::class, Playlist::class, QueueItem::class, Artist::class, Album::class, Genre::class, EpisodeProgress::class], version = 16)
 abstract class SongsDatabase : RoomDatabase() {
 
     abstract fun SongsDao(): SongsDao
@@ -24,6 +24,8 @@ abstract class SongsDatabase : RoomDatabase() {
     abstract fun AlbumsDao(): AlbumsDao
 
     abstract fun GenresDao(): GenresDao
+
+    abstract fun EpisodeProgressDao(): EpisodeProgressDao
 
     companion object {
         private var db: SongsDatabase? = null
@@ -48,6 +50,7 @@ abstract class SongsDatabase : RoomDatabase() {
                             .addMigrations(MIGRATION_12_13)
                             .addMigrations(MIGRATION_13_14)
                             .addMigrations(MIGRATION_14_15)
+                            .addMigrations(MIGRATION_15_16)
                             .build()
                     }
                 }
@@ -230,6 +233,16 @@ abstract class SongsDatabase : RoomDatabase() {
                     execSQL("ALTER TABLE tracks_new RENAME to tracks")
                     execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_tracks_id` ON `tracks` (`media_store_id`, `playlist_id`)")
                 }
+            }
+        }
+
+        // tabla nueva para el progreso de episodios en carpetas marcables
+        private val MIGRATION_15_16 = object : Migration(15, 16) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `episode_progress` (`path` TEXT NOT NULL, `position` INTEGER NOT NULL, " +
+                        "`listened` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, PRIMARY KEY(`path`))"
+                )
             }
         }
     }

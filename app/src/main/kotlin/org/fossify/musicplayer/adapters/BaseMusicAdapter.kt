@@ -2,8 +2,10 @@ package org.fossify.musicplayer.adapters
 
 import android.annotation.SuppressLint
 import android.graphics.drawable.Drawable
+import android.text.TextUtils
 import android.view.Menu
 import android.widget.ImageView
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
@@ -15,6 +17,7 @@ import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.commons.views.MyRecyclerView
 import org.fossify.musicplayer.activities.SimpleControllerActivity
 import org.fossify.musicplayer.extensions.*
+import org.fossify.musicplayer.helpers.EpisodeProgressStore
 import org.fossify.musicplayer.helpers.TagHelper
 import org.fossify.musicplayer.models.Track
 import org.fossify.musicplayer.playback.PlaybackService
@@ -37,6 +40,38 @@ abstract class BaseMusicAdapter<Type>(
     init {
         setupDragListener(true)
     }
+
+    // repinta solo las filas cuyo progreso de episodio ha cambiado
+    private val episodeProgressListener: (String?) -> Unit = { path ->
+        if (path == null) {
+            notifyDataSetChanged()
+        } else {
+            items.forEachIndexed { index, item ->
+                if (item is Track && item.path == path) {
+                    notifyItemChanged(index)
+                }
+            }
+        }
+    }
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        EpisodeProgressStore.addListener(episodeProgressListener)
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+        EpisodeProgressStore.removeListener(episodeProgressListener)
+    }
+
+    /** Título con ✓ / 🕐 delante si es un episodio de carpeta marcable. */
+    fun getTitleWithProgress(track: Track, title: CharSequence): CharSequence {
+        val prefix = EpisodeProgressStore.getTitlePrefix(context, track)
+        return if (prefix.isEmpty()) title else TextUtils.concat(prefix, title)
+    }
+
+    /** "3:45" normal, o "23:10 / 1:02:00" si está a medias. */
+    fun getDurationWithProgress(track: Track) = EpisodeProgressStore.getDurationText(context, track)
 
     override fun getItemCount() = items.size
 
